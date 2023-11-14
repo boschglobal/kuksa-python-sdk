@@ -285,7 +285,13 @@ setValue: error: unrecognized arguments: dtc2 ]
 
 ## Building and running a local version
 
-For development purposes it may be necessary to customize the code for the client and run a locally built version.
+For development purposes it may be necessary to customize the code for the client and run a locally built version. To be able to build all submodules must be present, and you build from the `kuksa-client` folder.
+
+```console
+git submodule update --init
+cd kuksa-client
+```
+
 First we suggest you create a dedicated [python virtual environment](https://docs.python.org/3/library/venv.html) for kuksa-client:
 
 ```console
