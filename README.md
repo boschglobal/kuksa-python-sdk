@@ -340,7 +340,7 @@ The Dockerfile needs to be executed on the parent directory (so it include the n
 
 
 ```console
-cd /some/dir/kuksa.val
+cd /some/dir/kuksa-python-sdk/
 docker build -f kuksa-client/Dockerfile -t kuksa-client:latest .
 ```
 
