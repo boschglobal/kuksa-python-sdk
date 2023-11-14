@@ -21,8 +21,6 @@ on:
     paths:
     - ".github/workflows/kuksa-client.yml"
     - "kuksa-client/**"
-    - "kuksa_certificates/**"
-    - "proto/**"
   workflow_dispatch:
 
 concurrency:
@@ -43,6 +41,7 @@ jobs:
       with:
         # Fetch everything to get tags working as expected
         fetch-depth: 0
+        submodules: 'true'
     - name: Docker meta
       id: meta
       uses: docker/metadata-action@v4
@@ -104,8 +103,9 @@ jobs:
         tags: "ttl.sh/kuksa.val/kuksa-client-${{github.sha}}"
         labels: ${{ steps.meta.outputs.labels }}
 
+    # Shall later be a kuksa-actions call
     - name: Posting temporary container location
-      uses: ./.github/actions/post-container-location
+      uses: erikbosch/kuksa-actions/post-container-location@main
       with:
         image: ttl.sh/kuksa.val/kuksa-client-${{github.sha}}
 

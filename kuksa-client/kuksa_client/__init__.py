@@ -27,7 +27,6 @@ from typing import Optional
 
 from . import cli_backend
 
-
 class KuksaClientThread(threading.Thread):
 
     # Constructor

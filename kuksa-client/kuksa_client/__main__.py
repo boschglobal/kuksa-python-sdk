@@ -39,7 +39,7 @@ from cmd2 import constants
 from cmd2.utils import basic_complete
 from urllib.parse import urlparse
 
-import kuksa_server_certificates
+from kuksa_client import kuksa_server_certificates
 from kuksa_client import KuksaClientThread
 from kuksa_client import _metadata
 
