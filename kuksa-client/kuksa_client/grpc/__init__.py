@@ -624,6 +624,18 @@ class BaseVSSClient:
             req.updates.append(update.to_message())
         logger.debug("%s: %s", type(req).__name__, req)
         return req
+    
+    def _prepare_streamed_set_request(
+        self, updates: Collection[EntryUpdate], paths_with_required_type: Dict[str, DataType],
+    ) -> val_pb2.StreamedUpdateRequest:
+        req = val_pb2.StreamedUpdateRequest(updates=[])
+        for update in updates:
+            value_type = paths_with_required_type.get(update.entry.path)
+            if value_type is not None:
+                update.entry.value_type = value_type
+            req.updates.append(update.to_message())
+        logger.debug("%s: %s", type(req).__name__, req)
+        return req
 
     def _process_set_response(self, response: val_pb2.SetResponse) -> None:
         logger.debug("%s: %s", type(response).__name__, response)
