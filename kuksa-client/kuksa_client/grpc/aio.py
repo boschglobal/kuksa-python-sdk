@@ -55,6 +55,8 @@ class VSSClient(BaseVSSClient):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.channel = None
+        self.streaming = True
+        self.queue = asyncio.Queue()
         self.exit_stack = contextlib.AsyncExitStack()
 
     async def __aenter__(self):
@@ -63,6 +65,20 @@ class VSSClient(BaseVSSClient):
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         await self.disconnect()
+
+    class StreamedUpdateGenerator:
+        def __init__(self, queue):
+            logging.info("StreamedUpdateGenerator")
+            self.queue = queue
+
+        async def __anext__(self):
+            logging.info("Waiting on upddate queue")
+            upd = await self.queue.get()
+            logging.info("Update %s", upd)
+            return upd
+
+        def __aiter__(self):
+            return self
 
     async def connect(self, target_host=None):
         creds = self._load_creds()
@@ -83,6 +99,21 @@ class VSSClient(BaseVSSClient):
         self.channel = await self.exit_stack.enter_async_context(channel)
         self.client_stub = val_pb2_grpc.VALStub(self.channel)
         self.connected = True
+        logger.info("ASYNCHEY")
+        if self.streaming is True:
+            logger.info("Will use streaming mode for set")
+            stream_resp_iter = self.client_stub.StreamedUpdate(self.StreamedUpdateGenerator(self.queue))
+            logger.info("rtkrtkrtiotnj")
+
+            try:
+                async for response in stream_resp_iter:
+                    print("Response %s", response)
+            except AioRpcError as exc:
+                raise VSSClientError.from_grpc_error(exc) from exc
+            #    if isinstance(response, val_pb2.StreamedUpdateResponse):
+            #        if response.error.code > 0:
+            #            logger.error("Streaming error: %s", response.error.code)
+
         if self.ensure_startup_connection:
             logger.debug("Connected to server: %s", await self.get_server_info())
 
@@ -324,11 +355,16 @@ class VSSClient(BaseVSSClient):
         ]
         paths_with_required_type.update(await self.get_value_types(paths_without_type, **rpc_kwargs))
         req = self._prepare_set_request(updates, paths_with_required_type)
-        try:
-            resp = await self.client_stub.Set(req, **rpc_kwargs)
-        except AioRpcError as exc:
-            raise VSSClientError.from_grpc_error(exc) from exc
-        self._process_set_response(resp)
+
+        if self.streaming is True:
+            logger.info(" Stream set request")
+            await self.queue.put(req)
+        else:
+            try:
+                resp = await self.client_stub.Set(req, **rpc_kwargs)
+            except AioRpcError as exc:
+                raise VSSClientError.from_grpc_error(exc) from exc
+            self._process_set_response(resp)
 
     @check_connected_async_iter
     async def subscribe(self,

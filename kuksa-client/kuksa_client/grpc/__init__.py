@@ -730,6 +730,7 @@ class VSSClient(BaseVSSClient):
 
         self.channel = self.exit_stack.enter_context(channel)
         self.client_stub = val_pb2_grpc.VALStub(self.channel)
+        logger.info("HEYY!!!")
         self.connected = True
         if self.ensure_startup_connection:
             logger.debug("Connected to server: %s", self.get_server_info())
